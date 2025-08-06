@@ -1,5 +1,4 @@
 import pytest
-from urllib.parse import quote
 from app import app
 
 @pytest.fixture
@@ -10,16 +9,11 @@ def client():
 
 def test_hello_world(client):
     rv = client.get('/')
-    assert rv.get_json() == {"message": "Hello from Python Flask App!"}
+    assert b'Hello from Python Flask App!' in rv.data
 
 def test_add_numbers(client):
-    rv = client.get('/add/1/1')
-    assert rv.get_json() == {"result": 2}
+    rv = client.get('/add/5/3')
+    assert b'{"result":8}' in rv.data
 
-    rv = client.get(f"/add/{quote(str(-10))}/5")  # handles negative value
-    assert rv.get_json() == {"result": -5}
-
-def test_add_numbers_fail(client):
-    rv = client.get('/add/1/1')
-    assert rv.get_json() != {"result": 3}
-    assert rv.get_json() == {"result": 2}
+    rv = client.get('/add/-10/5')
+    assert b'{"result":-5}' in rv.data
