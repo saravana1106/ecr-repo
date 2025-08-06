@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  IMAGE_NAME: ${{ secrets.ECR }}
-  AWS_REGION: ${{ secrets.eu-north-1 }}
+  IMAGE_NAME: ${{ secrets.ECR_REPO }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   build-test-scan-deploy:
@@ -33,13 +33,13 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            -t ${{ secrets.ACCOUNTID }}.dkr.ecr.${{ secrets.eu-north-1 }}.amazonaws.com/${{ secrets.ECR }}:latest \
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest \
             --push .
 
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ secrets.AWS_ACCOUNTID }}.dkr.ecr.${{ secrets.eu-north-1 }}.amazonaws.com/${{ secrets.ECR }}:latest
+          image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -48,12 +48,12 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PREPROD_SERVER }} \
-          "docker pull ${{ secrets.AWS_ACCOUNTID }}.dkr.ecr.${{ secrets.eu-north-1 }}.amazonaws.com/${{ secrets.ECR }}:latest && \
-           docker run -d --name myapp -p 80:80 ${{ secrets.AWS_ACCOUNTID }}.dkr.ecr.${{ secrets.eu-north-1 }}.amazonaws.com/${{ secrets.ECR }}:latest"
+          "docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest && \
+           docker run -d --name myapp -p 80:80 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest"
 
       - name: Deploy to Prod
         if: github.ref == 'refs/heads/main' && github.event.pusher.name == 'admin'
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PROD_SERVER }} \
-          "docker pull ${{ secrets.AWS_ACCOUNTID }}.dkr.ecr.${{ secrets.eu-north-1 }}.amazonaws.com/${{ secrets.ECR }}:latest && \
-           docker run -d --name myapp -p 80:80 ${{ secrets.AWS_ACCOUNTID }}.dkr.ecr.${{ secrets.eu-north-1 }}.amazonaws.com/${{ secrets.ECR }}:latest"
+          "docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest && \
+           docker run -d --name myapp -p 80:80 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest"
