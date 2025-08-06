@@ -12,7 +12,7 @@ def test_hello_world(client):
     assert b'Hello from Python Flask App!' in rv.data
 
 def test_add_numbers(client):
-    rv = client.get('/add/5/3')
+    rv = client.get('/add/1/1')
     assert b'{"result":8}' in rv.data
 
     rv = client.get('/add/-10/5')
