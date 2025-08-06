@@ -9,16 +9,22 @@ def client():
 
 def test_hello_world(client):
     rv = client.get('/')
-    assert b'Hello from Python Flask App!' in rv.data
+    # Check JSON directly instead of matching raw bytes
+    json_data = rv.get_json()
+    assert json_data == {"message": "Hello from Python Flask App!"}
 
-def test_add_numbers(client):
+@pytest.mark.parametrize("a,b,expected", [
+    (5, 3, 8),
+    (-10, 5, -5),
+    (1, 1, 2),  # fixed expected value
+])
+def test_add_numbers(client, a, b, expected):
+    rv = client.get(f'/add/{a}/{b}')
+    assert rv.status_code == 200
+    assert rv.get_json() == {"result": expected}
+
+def test_add_numbers_fail(client):
     rv = client.get('/add/1/1')
-    assert b'{"result":8}' in rv.data
-
-    rv = client.get('/add/-10/5')
-    assert b'{"result":-5}' in rv.data
-
-def test_add_numbers_fail(client): # An example of a test that might fail for demonstration
-    rv = client.get('/add/1/1')
-    assert b'{"result":3}' not in rv.data # This test is designed to pass, checking for 2 not 3
-    assert b'{"result":2}' in rv.data # This test will pass
+    # Designed to pass: result is 2, so should not equal 3
+    assert rv.get_json() != {"result": 3}
+    assert rv.get_json() == {"result": 2}
