@@ -29,6 +29,9 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Run Unit Tests
         run: |
           python3 -m venv venv
